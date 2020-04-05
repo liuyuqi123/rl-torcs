@@ -6,8 +6,6 @@ import tensorflow as tf
 from agent import Agent
 from environment import Env
 from replay_memory import ReplayMemory
-import matplotlib.pyplot as plt
-# from utils import Render
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--mode', type=str, default='play', help='modes={play, train}')
@@ -28,12 +26,12 @@ parser.add_argument('--seed', type=int, default=1221)
 args = parser.parse_args()
 
 
-print 'Start of DDPG_TORCS, mode is:', args.mode
+print('Start of DDPG_TORCS, mode is:', args.mode)
 
 state_dim = 3
 action_dim = 1
-writer_path = './results/try6/summary'
-saver_path = './results/try6/model'
+writer_path = './results/summary'
+saver_path = './results/model'
 if not os.path.exists(writer_path):
     os.makedirs(writer_path)
 if not os.path.exists(saver_path):
@@ -41,7 +39,7 @@ if not os.path.exists(saver_path):
 
 sess = tf.Session()
 writer = tf.summary.FileWriter(writer_path)
-print 'Creating agent, env and memory...'
+print('Creating agent, env and memory...')
 
 agent = Agent(sess, state_dim, action_dim, writer, args.learning_rate_actor, args.learning_rate_critic)
 memory = ReplayMemory(args.memory_sz)
@@ -50,7 +48,6 @@ env = Env()
 
 if args.mode == 'play':
     path = 'pre-trained/183337.ckpt'
-    # path = 'outputs6/experiment9/model/final_1500771.ckpt'
     agent.restore(path)
     # agent.torcs_net.load('pre-trained/torcs_net.npy', sess)
     # print 'Model is restored from', path
@@ -59,35 +56,18 @@ if args.mode == 'play':
 episode = 0
 step = 0
 
-def get_macro_action(a_ls):
-    cnter = {'left': 0, 'straight': 0, 'right': 0}
-    straight_threshold = 0.025
-    for a in a_ls:
-        if a < -straight_threshold:
-            cnter['right'] += 1
-        elif a > straight_threshold:
-            cnter['left'] += 1
-        else:
-            cnter['straight'] += 1
-    sorted_cnter = sorted(cnter.items(), key=operator.itemgetter(1))
-    most_common = sorted_cnter[-1] # e.g. ('straight', 2)
-    return most_common
 
 
 if args.mode == 'train':
     score_holder = tf.placeholder('float')
     score_summ = tf.summary.scalar('global/score', score_holder)
 
-# ai_steers = []
-# ai_dist = []
-# bot_steers = []
-# bot_dist = []
 
 angle = []
 to_track_middle = []
 steer = []
 
-print 'Start of experiment...'
+print('Start of experiment...')
 while step < args.num_steps:
     if np.mod(episode, 15) == 0:
         s = env.reset(relaunch=True)
@@ -115,7 +95,7 @@ while step < args.num_steps:
             angle.append(info["angle"]*3.1415926)
             to_track_middle.append(info["to_middle_m"]) # abuse
             steer.append(a)
-            print("step = {}, angle = {}, dist = {}, steer = {}".format(ep_steps, angle[-1], to_track_middle[-1], steer[-1]))
+            print(("step = {}, angle = {}, dist = {}, steer = {}".format(ep_steps, angle[-1], to_track_middle[-1], steer[-1])))
 
 
             if args.mode == 'train' and ep_steps % 4 == 0:
@@ -133,10 +113,8 @@ while step < args.num_steps:
         s = s2
 
     episode += 1
-    print '# %d, steps: %d, ep_steps: %d, ep_r: %.4f, eps: %.4f' % \
-            (episode+1, step, ep_steps, ep_rewards, epsilon)
-    # print 'Saving bot and ai steers...'
-    # np.savez('./ai_steers.npz', ai_steers=ai_steers, ai_dist=ai_dist)
+    print('# %d, steps: %d, ep_steps: %d, ep_r: %.4f, eps: %.4f' % \
+            (episode+1, step, ep_steps, ep_rewards, epsilon))
 
     if args.mode == 'train':
         summ = sess.run(score_summ, feed_dict={score_holder: ep_rewards})
@@ -151,7 +129,5 @@ if args.mode == 'train':
     path = saver_path + '/final_' + str(step) + '.ckpt'
     agent.save(path)
 
-np.savez("./drl_statis_new.npz", angle = angle, to_track_middle = to_track_middle, steer = steer)
-
 env.end()
-print 'Finish training'
+print('Finish training')

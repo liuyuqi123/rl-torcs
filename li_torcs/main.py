@@ -27,8 +27,8 @@ print 'Start of DDPG_TORCS, mode is:', args.mode
 
 state_dim = 3
 action_dim = 1
-writer_path = './outputs/experiment5/summary'
-saver_path = './outputs/experiment5/model'
+writer_path = './outputs/summary'
+saver_path = './outputs/model'
 if not os.path.exists(writer_path):
     os.makedirs(writer_path)
 if not os.path.exists(saver_path):
@@ -107,23 +107,6 @@ while step < args.num_steps:
         # print 'cnn to_middle: %.4f, true to_middle: %.4f, diff: %.5f'%(cnn_laser[1], s[0][1], to_middle_diff)
 
 
-        if ep_steps > 35:
-            # subplot 1
-            fig.canvas.restore_region(backgrounds[0])
-            lines[0][0].set_ydata(np.array(cnn_angles[-num_show:]))
-            lines[0][1].set_ydata(np.array(true_angles[-num_show:]))
-            axes[0].draw_artist(lines[0][0])
-            axes[0].draw_artist(lines[0][1])
-            fig.canvas.blit(axes[0].bbox)
-
-            # subplot 2
-            fig.canvas.restore_region(backgrounds[1])
-            lines[1][0].set_ydata(np.array(cnn_tms[-num_show:]))
-            lines[1][1].set_ydata(np.array(true_tms[-num_show:]))
-            axes[1].draw_artist(lines[1][0])
-            axes[1].draw_artist(lines[1][1])
-            fig.canvas.blit(axes[1].bbox)
-
         s2, r, term, info = env.step(cnn_a)
         if args.mode == 'train' and ep_steps > 24:
             memory.add(s, a, r, s2, term)
@@ -141,10 +124,6 @@ while step < args.num_steps:
     episode += 1
     print '# %d, steps: %d, ep_steps: %d, ep_r: %.4f, eps: %.4f' % \
                                          (episode+1, step, ep_steps, ep_rewards, epsilon)
-    np.savez('ai_drive_stats_new1.npz', gt_to_middles_m = gt_to_middles_m,
-                          pred_to_middles_m = pred_to_middles_m,
-                          gt_angle = gt_angle,
-                          pred_angle = pred_angle)
     print('stats info saved')
 
     if args.mode == 'train':

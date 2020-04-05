@@ -13,7 +13,7 @@ class Env(object):
         time.sleep(0.5)
         os.system("sh autostart.sh")
         time.sleep(0.5)
-        self.shared_memory = sysv_ipc.SharedMemory(1234)
+        self.shared_memory = sysv_ipc.SharedMemory(934)
         # check if launch successfully
         self.check_launch()
 

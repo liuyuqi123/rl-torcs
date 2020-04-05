@@ -28,30 +28,6 @@ class Env(object):
                 self.steps_ += 1
                 return ob, r, term, info
 
-    def step_lqr(self, a):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                self.write_(a)
-                break
-
-    def step_pid(self, a):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                self.write_(a)
-                break
-
-    def step_nmpc(self, a):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                self.write_(a)
-                break
-
     def read_(self, shared):
         speed = read_speed(shared)  # [0, 50]
         to_track_middle = read_to_track_middle(shared)  # [-1, 1]
@@ -64,14 +40,8 @@ class Env(object):
         if self.vision:
             ob = read_img(shared)
         else:
-            if self.steps_ < 500:
-                lsr = [angle, to_track_middle, speed*3.6/70]
-            elif self.steps_ < 1000:
-                lsr = [angle, to_track_middle+0.65, speed * 3.6 / 70]
-            else:
-                lsr = [angle, to_track_middle -0.65, speed * 3.6 / 70]
+            ob = [angle, to_track_middle, speed*3.6/70]
             # img = read_img(shared)
-            ob = lsr
             # print "dist to middle:", to_track_middle
 
         if abs(to_track_middle) <= 1.0:
@@ -84,38 +54,6 @@ class Env(object):
             reward = -1.0
         # print "reward: %.4f\tdist: %.3f\tangle: %.3f | %s" % (reward, to_track_middle, angle, case)
         return ob, reward, term, info
-
-    def read_lqr_x(self):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                x1 = read_lqr_x1(shared) # to middle
-                # x2 = read_lqr_x2(shared)
-                x3 = read_lqr_x3(shared) # angle
-                # x4 = read_lqr_x4(shared)
-                x5 = read_lqr_x5(shared) # normed to middle
-                x6 = read_lqr_x6(shared) # speed_x
-                return [x1, x3, x5, x6]
-    
-    def read_pid_x(self):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                x1 = read_pid_x1(shared)
-                x2 = read_pid_x2(shared)
-                x3 = read_pid_x3(shared)
-                return [x1, x2, x3]
-
-    def read_nmpc_x(self):
-        while True:
-            shared = self.shared_memory.read(self.shm_sz)
-            written = read_written(shared)
-            if written == 1:
-                x1 = read_nmpc_x1(shared)
-                x2 = read_nmpc_x2(shared)
-                return [x1, x2]
 
     def write_(self, a):
         write_steer(self.shared_memory, a)
@@ -167,7 +105,7 @@ class Env(object):
                 time.sleep(1)
                 shared = self.shared_memory.read(self.shm_sz)
                 written = read_written(shared)
-                print 'written = ', written
+                print('written = ', written)
                 if written != 1:
                     print("Count down:", (3 - i))
                 else:
