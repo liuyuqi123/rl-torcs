@@ -23,8 +23,8 @@ This is Tensorflow implementation of our IEEE CIM 2019 paper on [Reinforcement L
 Please note this implement use Python2.7, and is tested on Ubuntu 16.04.
 
 ```shell
-git clone xxxxx
-cd xxxx
+https://github.com/DRL-CASIA/rl-torcs.git
+cd rl-torcs
 
 # Install TORCS dependencies
 sudo apt-get update
